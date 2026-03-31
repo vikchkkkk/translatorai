@@ -9,9 +9,8 @@ st.set_page_config(page_title="Polyglot OCR", page_icon="🌍")
 
 @st.cache_resource
 def load_ocr_model():
-    """Загрузка модели для распознавания латиницы (EN/FR)"""
-    # Используем TrOCR от Microsoft
-    return pipeline("image-to-text", model="microsoft/trocr-base-printed")
+    # Заменяем "image-to-text" на "image-text-to-text"
+    return pipeline("image-text-to-text", model="microsoft/trocr-base-printed")
 
 def get_text_metrics(text):
     """Усложнение: Аналитика текста"""
