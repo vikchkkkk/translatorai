@@ -1,6 +1,6 @@
 import io
 import streamlit as st
-from transformers import pipeline
+from transformers import TrOCRProcessor, VisionEncoderDecoderModel
 from PIL import Image
 from deep_translator import GoogleTranslator
 
@@ -9,8 +9,10 @@ st.set_page_config(page_title="Polyglot OCR", page_icon="🌍")
 
 @st.cache_resource
 def load_ocr_model():
-    # Заменяем "image-to-text" на "image-text-to-text"
-    return pipeline("image-text-to-text", model="microsoft/trocr-base-printed")
+    """Ручная загрузка модели и процессора для TrOCR"""
+    processor = TrOCRProcessor.from_pretrained("microsoft/trocr-base-printed")
+    model = VisionEncoderDecoderModel.from_pretrained("microsoft/trocr-base-printed")
+    return processor, model
 
 def get_text_metrics(text):
     """Усложнение: Аналитика текста"""
@@ -38,13 +40,18 @@ if uploaded_file:
     
     if st.button('🔍 Распознать и перевести'):
         with st.spinner('Машинное зрение работает...'):
-            # 1. OCR (Распознавание)
-            model = load_ocr_model()
-            ocr_result = model(img)
-            recognized_text = ocr_result[0]["generated_text"]
-            
-            # 2. Перевод
+    # 1. OCR (Распознавание)
+            processor, model = load_ocr_model()
+    
+    # Подготовка изображения и генерация текста
+            pixel_values = processor(images=img, return_tensors="pt").pixel_values
+            generated_ids = model.generate(pixel_values)
+            recognized_text = processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
+    
+    # 2. Перевод (оставляем как было)
             translated_text = GoogleTranslator(source='auto', target='ru').translate(recognized_text)
+    
+    # ... далее вывод результатов ..
             
             # 3. Метрики
             metrics = get_text_metrics(recognized_text)
