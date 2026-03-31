@@ -1,6 +1,5 @@
 streamlit
-transformers
-torch
-torchvision
+easyocr
 pillow
+numpy
 deep-translator
